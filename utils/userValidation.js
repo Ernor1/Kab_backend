@@ -8,4 +8,4 @@ const passwordComplexity = require('joi-password-complexity')
     })
         return schema.validate(product)
     }
-module.exports.validate = validateUser;
+module.exports.validateUser = validateUser;

@@ -5,6 +5,7 @@ const { request } = require("express");
 const jwt = require("jsonwebtoken")
 const bcryptjs = require("bcryptjs"); 
 const cookie = require("cookie-parser")
+const {adminModel} = require('../models/adminModel')
 
 
 module.exports.adminAccount = () =>{
@@ -20,13 +21,13 @@ module.exports.adminAccount = () =>{
             let token = jwt.sign({_id:admin._id},process.env.SECRET,{
                 expiresIn: "1h",
             })
-            const bearerHeader = req.header(['X-auth-Token'],`Bearer ${token}`);
-            if(typeof bearerHeader !== 'undenfined'){
-                const bearer = bearerHeader.split(' ')
-                const bearerToken = bearer[1];
-                req.token = bearerToken;
-                next()
-            }
+            // const bearerHeader = req.header(['X-auth-Token'],`Bearer ${token}`);
+            // if(typeof bearerHeader !== 'undenfined'){
+            //     const bearer = bearerHeader.split(' ')
+            //     const bearerToken = bearer[1];
+            //     req.token = bearerToken;
+            //     next()
+            // }
     //         const tok= req.headers.authorization.split("")[1];
     //   header,payload,signature = token.split('.')
     //   console.log(tok);
@@ -34,7 +35,7 @@ module.exports.adminAccount = () =>{
          admin.password = await bcryptjs.hash(admin.password, salt);
              await admin.save();res.cookie("admindata",admin.email);
             // console.log(token);
-            res.send(token).status(201);
+            res.send(admin).status(201);
         }catch (error) {
             console.log(error);
         }
@@ -45,7 +46,7 @@ module.exports.adminLogin = () => {
     return async(req, res, next) => {
         try {
             const  {email,password} = req.body;
-            const admin = await signUpModel.findOne({
+            const admin = await adminModel.findOne({
                 email:email,
             })
             if(!admin){
@@ -62,8 +63,8 @@ module.exports.adminLogin = () => {
                 process.env.SECRET
 
             );
-            res.cookie("admin",admin.email)
-            res.status(200).header("X-auth-token",token).json({
+          res.cookie("admin",admin.email)
+        return    res.status(200).header("X-auth-token",token).json({
                 success:true,
                
             });

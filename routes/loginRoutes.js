@@ -1,6 +1,6 @@
 const express = require("express");
-const  {adminAccount,adminLogin} = require("../controllers/signUPController")
-const  {signUpModel} = require("../models/signUpModel")
+const {adminAccount,adminLogin} = require('../controllers/adminController')
+const  {userModel} = require("../models/userModel")
 const router = express.Router()
 
 router.post('/admin',adminAccount());
