@@ -20,7 +20,8 @@ const {wishRoutes} = require("./routes/wishRoutes")
 const {contactRoutes} = require("./routes/contactRoutes")
 const {cartRoutes} = require("./routes/cartRoutes")
 const fileupload  = require('express-fileupload')
-const {adminRoutes} = require("./routes/loginRoutes");
+const {adminRoutes} = require("./routes/adminRoutes");
+const {userRoutes} = require("./routes/userRoutes");
 require("dotenv/config");
 
 app.use(fileupload())
@@ -34,6 +35,7 @@ app.use(wishRoutes)
 app.use(contactRoutes)
 app.use(cartRoutes)
 app.use(adminRoutes)
+app.use(userRoutes)
 // app.use(express.static)
 
 
