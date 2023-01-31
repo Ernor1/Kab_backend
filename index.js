@@ -14,16 +14,16 @@ dotenv.config();
 const PORT = process.env.PORT
 const dbConnection = require('./middleware/database')
 const schema = require('./models/productModel')
-const {productRoutes} = require('./routes/productRouter')
-const {messageRoutes} = require("./routes/messageRouter")
-const {wishRoutes} = require("./routes/wishRoutes")
-const {contactRoutes} = require("./routes/contactRoutes")
-const {cartRoutes} = require("./routes/cartRoutes")
-const fileupload  = require('express-fileupload')
-const {adminRoutes} = require("./routes/adminRoutes");
-const {userRoutes} = require("./routes/userRoutes");
+const { productRoutes } = require('./routes/productRouter')
+const { messageRoutes } = require("./routes/messageRouter")
+const { wishRoutes } = require("./routes/wishRoutes")
+const { contactRoutes } = require("./routes/contactRoutes")
+const { cartRoutes } = require("./routes/cartRoutes")
+const fileupload = require('express-fileupload')
+const { adminRoutes } = require("./routes/adminRoutes");
+const { userRoutes } = require("./routes/userRoutes");
 require("dotenv/config");
-
+app.use(cors())
 app.use(fileupload())
 
 app.use(bodyParser.json())
@@ -36,25 +36,18 @@ app.use(contactRoutes)
 app.use(cartRoutes)
 app.use(adminRoutes)
 app.use(userRoutes)
-// app.use(express.static)
+// app.use(express.static)  
 
 
-app.use(cors({
-    
-    explore:true,
-}))
 
-var options = {
-    explore:true,
-}
 
-const upload = multer({dest: './uploads'});
+const upload = multer({ dest: './uploads' });
 var type = upload.single('recfile')
 
 dbConnection();
 
 
 
-app.listen(PORT,()=>{
+app.listen(PORT, () => {
     console.log(`server running on ${PORT}`)
 })

@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const {cartModel} = require("../models/cartModel")
+const { cartModel } = require("../models/cartModel")
 const multer = require("multer");
 const upload = multer({ dest: "./uploads" });
 var type = upload.single("recfile");
@@ -7,7 +7,7 @@ const fs = require("fs");
 const path = require("path");
 require("dotenv").config();
 const cloudinary = require("cloudinary").v2;
-const {cartValidation} = require("../utils/cartValidation")
+const { cartValidation } = require("../utils/cartValidation")
 const { result } = require("@hapi/joi/lib/base");
 let streamifier = require("streamifier");
 
@@ -38,33 +38,29 @@ let uploadFromBuffer = (req) => {
   });
 };
 module.exports.createCart = () => {
-  return async (req, res, next) => {
-    // console.log(req.body);
-    console.log(req.files.picture);
-
+  return async (req, res) => {
     const { error } = cartValidation(req.body);
-    if (error) return res.send(error.details[0].message);
-    try {
-      // Upload the image
-      const result = await uploadFromBuffer(req);
-      console.log(result);
-
-      // then(result=>console.log(result));
-
-      const cart = new cartModel({
-        name: req.body.name,
-        price: req.body.price,
-        category: req.body.category,
-        discount: req.body.discount,
-        status: req.body.status,
-        picture: result.url,
-      });
-
-      await cart.save();
-      res.send(cart).status(201);
-    } catch (error) {
-      console.error(error);
+    if (error) return res.json(error.details[0].message);
+    const cartExist = await cartModel.find({ id: req.body.id })
+    console.log(cartExist);
+    if (cartExist.length >= 1) {
+      res.json({ message: "Exists" })
     }
+    else {
+      const cart = new cartModel(req.body);
+      try {
+        const newCart = await cart.save()
+        res.status(201).json({
+          data: newCart,
+          message: "Added To cart"
+        });
+        console.log(newCart, "done");
+      } catch (error) {
+        console.error(error);
+        res.status(500).json(error)
+      }
+    }
+
   };
 };
 module.exports.getCartById = () => {
@@ -82,7 +78,7 @@ module.exports.getCartById = () => {
 module.exports.getAllCarts = () => {
   return async (req, res) => {
     try {
-      const carts = await cartModel.find();
+      const carts = await cartModel.find({});
       return res.send(carts).status(200);
     } catch (error) {
       console.log(error);
@@ -92,27 +88,28 @@ module.exports.getAllCarts = () => {
 
 module.exports.updateCart = () => {
   return async (req, res) => {
-   
-   try {
-     cart = await cartModel.findByIdAndUpdate(req.params._id, req.body);
-     res.send("cart updated").status(201);
-   return await cart.save(); 
 
-   } catch (error) {
-    console.log(error);
-   }
-   
- 
-    
-    
+    try {
+      const cart = await cartModel.findByIdAndUpdate(req.params._id, req.body);
+      res.send("cart updated").status(201);
+      return await cart.save();
+
+    } catch (error) {
+      console.log(error);
+    }
+
+
+
+
   };
 };
 
 module.exports.deleteCart = () => {
   return async (req, res) => {
     try {
-      cart = await cartModel.findByIdAndDelete(req.params.id);
-      return res.send("cart deleted");
+      const cart = await cartModel.findByIdAndDelete(req.params._id);
+      console.log(cart);
+      return res.json("cart deleted"); s
     } catch (error) {
       console.log(error);
     }

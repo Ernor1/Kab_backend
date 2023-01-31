@@ -102,19 +102,19 @@ module.exports.updateProduct = () => {
     //   req.body,
     //   { new: true }
     // );
-   try {
-     product = await productModel.findByIdAndUpdate(req.params._id, req.body);
-     res.send("product updated").status(201);
-   return await product.save(); 
+    try {
+      product = await productModel.findByIdAndUpdate(req.params._id, req.body);
+      res.send("product updated").status(201);
+      return await product.save();
 
-   } catch (error) {
-    console.log(error);
-   }
-   
+    } catch (error) {
+      console.log(error);
+    }
+
     // if(!product)
     // return res.send("failed to update")
-    
-    
+
+
   };
 };
 
