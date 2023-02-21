@@ -26,5 +26,15 @@ const promProductSchema = mongoose.Schema({
 }
 
 )
+promProductSchema.pre('remove', function (next) {
+    if (Date.parse(this.duration) < Date.now()) {
+        this.model('PromProducts').deleteOne({ _id: this._id }, function (err) {
+            if (err) return next(err);
+            next();
+        });
+    } else {
+        next();
+    }
+})
 
 module.exports.promProductModel = new mongoose.model('PromProducts', promProductSchema)
