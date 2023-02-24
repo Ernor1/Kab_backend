@@ -1,29 +1,30 @@
 const express = require('express');
-const {userModel }  = require('../models/userModel')
+const { userModel } = require('../models/userModel')
 const cookie = require('cookie-parser')
 const jwt = require("jsonwebtoken")
-const {validateUser} = require('../utils/userValidation')
+const { validateUser } = require('../utils/userValidation')
 const bcryptjs = require('bcryptjs')
 
-module.exports.createAccount  = () => {
-    return async (req,res,next) => {
-        const {error} = validateUser(req.body)
-        if(error) return res.send(error.details[0].message)
+module.exports.createAccount = () => {
+    return async (req, res, next) => {
+        const { error } = validateUser(req.body)
+        if (error) return res.send(error.details[0].message)
         try {
             const user = new userModel({
-                username:req.body.username,
-                email:req.body.email,
-                password:req.body.password
+                username: req.body.username,
+                email: req.body.email,
+                password: req.body.password
             })
             // console.log("before token");
             // let jwt = jwt.sign({_id:user_id},process.env.SECRET,{
             //     expiresIn:"1h"
             // })
             const salt = await bcryptjs.genSalt(10);
-            user.password = await bcryptjs.hash(user.password,salt)
-             await account.save();
-            res.cookie('userdat',user.email)
-            res.send(user).status(201)
+            user.password = await bcryptjs.hash(user.password, salt)
+            await account.save();
+            res.cookie('userdat', user.email)
+            res.json(user).status(201)
+            res.redirect('/login')
         } catch (error) {
             console.log(error);
         }
@@ -31,22 +32,22 @@ module.exports.createAccount  = () => {
 };
 
 module.exports.getUserById = () => {
-    return async (req, res, next) =>  {
-    console.log(req.params);
-    try {
-        const user  = await userModel.findById(req.params._id)
-        res.status(200).send(user);
-        
-    } catch (error) {
-        console.log(error);
-    }
+    return async (req, res, next) => {
+        console.log(req.params);
+        try {
+            const user = await userModel.findById(req.params._id)
+            res.status(200).send(user);
+
+        } catch (error) {
+            console.log(error);
+        }
     }
 }
 
 module.exports.getAllUsers = () => {
-    return async (req,res) => {
+    return async (req, res) => {
         try {
-            const users  = await userModel.find();
+            const users = await userModel.find();
             return res.send(users).status(200)
         } catch (error) {
             console.log(error);
@@ -56,61 +57,73 @@ module.exports.getAllUsers = () => {
 
 
 module.exports.updateUser = (req, res, next) => {
-     return async (req,res) => {
+    return async (req, res) => {
         try {
-            user  = await userModel.findByIdAndUpdate(req.params._id, req.body);
+            user = await userModel.findByIdAndUpdate(req.params._id, req.body);
             res.send("user upsdate").status(201)
             return await user.save();
         } catch (error) {
             console.log(error);
         }
-     }
     }
+}
 
-    module.exports.deleteUser  = () => {
-        return async (req, res) => {
-            try {
-                user = await userModel.findByIdAndDelete(req.params.id);
-                res.send("user deleted")
-            } catch (error) {
-                console.log(error);
-            }
-
-        };
+module.exports.deleteUser = () => {
+    return async (req, res) => {
+        try {
+            user = await userModel.findByIdAndDelete(req.params.id);
+            res.send("user deleted")
+        } catch (error) {
+            console.log(error);
+        }
 
     };
 
-    module.exports.loginUser = () => {
-    return async(req,res) => {
+};
+function requireAuth(req, res, next) {
+    if (!req.user) {
+        req.session.returnTo = req.originalUrl;
+        return res.redirect('/login');
+    }
+    next();
+}
+
+module.exports.loginUser = () => {
+    return async (req, res) => {
         try {
             const { email, password } = req.body;
             const user = await userModel.findOne({ email: email });
             if (!user) {
-              return res.send("person not found");
+                return res.send("person not found");
             }
             console.log(user.password);
             const passwordMatch = await bcryptjs.compare(password, user.password);
             console.log(passwordMatch);
             if (!passwordMatch) {
-              console.log("Testing");
-              return res.send("incorrect password or email");
+                console.log("Testing");
+                return res.send("incorrect password or email");
             }
             let token = jwt.sign({
-                _id: person._id },
+                _id: person._id
+            },
                 process.env.MY_TOKEN
-                );
+            );
             res.cookie("userdata", user.email, {
-              sameSite: true,
-              httpOnly: false,
-              maxAge: 24 * 60 * 60 * 1000
+                sameSite: true,
+                httpOnly: false,
+                maxAge: 24 * 60 * 60 * 1000
             });
             // await user.save()
-            // res.redirect('/form');
+            const returnTo = req.session.returnTo || '/';
+            delete req.session.returnTo;
+            res.redirect(returnTo);
             // console.log(email)
-            return res.send(token);
-          } catch (error) {
+            req.session.set('user', { email: user.email, name: user.username, token })
+            await req.session.save()
+            return res.json(token);
+        } catch (error) {
             console.log(error);
-          }
+        }
     }
 
-    }
+}
