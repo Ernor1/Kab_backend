@@ -22,7 +22,7 @@ module.exports.createAccount = () => {
             const salt = await bcryptjs.genSalt(10);
             user.password = await bcryptjs.hash(user.password, salt)
             await account.save();
-            res.cookie('userdat', user.email)
+            res.cookie('userdata', user.email)
             res.json(user).status(201)
             res.redirect('/login')
         } catch (error) {
