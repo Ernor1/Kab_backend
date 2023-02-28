@@ -37,8 +37,7 @@ app.use(wishRoutes)
 app.use(contactRoutes)
 app.use(cartRoutes)
 app.use(adminRoutes)
-app.use(userRoutes); o
-dqwpdjqwpdqwj
+app.use(userRoutes);
 // app.use(express.static)  
 
 

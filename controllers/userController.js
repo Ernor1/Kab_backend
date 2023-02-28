@@ -6,6 +6,7 @@ const { validateUser } = require('../utils/userValidation')
 const bcryptjs = require('bcryptjs')
 
 module.exports.createAccount = () => {
+    console.log("was here");
     return async (req, res, next) => {
         const { error } = validateUser(req.body)
         if (error) return res.send(error.details[0].message)
@@ -21,12 +22,13 @@ module.exports.createAccount = () => {
             // })
             const salt = await bcryptjs.genSalt(10);
             user.password = await bcryptjs.hash(user.password, salt)
-            await account.save();
+            await user.save();
+            console.log(user);
             res.cookie('userdata', user.email)
-            res.json(user).status(201)
+            res.status(201).json({ user: user, message: 'user created successfully' })
             res.redirect('/login')
         } catch (error) {
-            console.log(error);
+            console.log("was here this is the error" + error);
         }
     };
 };
