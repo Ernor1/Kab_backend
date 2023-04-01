@@ -40,14 +40,22 @@ let uploadFromBuffer = (req) => {
 module.exports.createCart = () => {
   return async (req, res) => {
     const { error } = cartValidation(req.body);
-    if (error) return res.json(error.details[0].message);
-    const cartExist = await cartModel.find({ id: req.body.id })
+    if (error) {
+      console.log("we refuse ", error.details[0].message, " as a cart");
+      return res.json(error.details[0].message);
+    }
+
+    // set the user identifier from the authenticated user
+    const userId = req.params.userId;
+
+    const cartExist = await cartModel.find({ user: userId, id: req.body.id })
     console.log(cartExist);
     if (cartExist.length >= 1) {
       res.json({ message: "Exists" })
     }
     else {
-      const cart = new cartModel(req.body);
+      // set the user identifier on the cart object
+      const cart = new cartModel({ ...req.body, user: userId });
       try {
         const newCart = await cart.save()
         res.status(201).json({
@@ -60,58 +68,81 @@ module.exports.createCart = () => {
         res.status(500).json(error)
       }
     }
-
   };
 };
+
 module.exports.getCartById = () => {
   return async (req, res) => {
     console.log(req.params);
+
+    // get the user identifier from the authenticated user
+    const userId = req.params.userId;
+
     try {
-      const cart = await cartModel.findById(req.params._id);
-      res.status(200).send(cart);
+      const cart = await cartModel.findOne({ _id: req.params._id, user: userId });
+      if (cart) {
+        res.status(200).send(cart);
+      } else {
+        res.status(404).send("Cart not found");
+      }
     } catch (error) {
       console.log(error);
+      res.status(500).send(error);
     }
   };
 };
+
 
 module.exports.getAllCarts = () => {
   return async (req, res) => {
+    // get the user identifier from the authenticated user
+    const userId = req.params.userId;
+
     try {
-      const carts = await cartModel.find({});
-      return res.send(carts).status(200);
+      console.log("this is the ", userId);
+      if (userId !== "undefined") {
+        const carts = await cartModel.find({ user: userId }); 
+        return res.json(carts).status(200);
+      }
+      else {
+        return res.json([]).status(200);
+      }
     } catch (error) {
       console.log(error);
+      res.status(500).send(error);
     }
   };
 };
 
+
 module.exports.updateCart = () => {
   return async (req, res) => {
-
     try {
-      const cart = await cartModel.findByIdAndUpdate(req.params._id, req.body);
-      res.send("cart updated").status(201);
-      return await cart.save();
-
+      const cart = await cartModel.findOneAndUpdate({ _id: req.params._id, userId: req.params.userId }, req.body, { new: true });
+      if (!cart) {
+        return res.status(404).send('Cart not found');
+      }
+      res.json({ message: "cart updated", data: cart }).status(201);
+      console.log("done updated cart");
     } catch (error) {
       console.log(error);
+      res.status(500).json(error);
     }
-
-
-
-
   };
 };
 
 module.exports.deleteCart = () => {
   return async (req, res) => {
     try {
-      const cart = await cartModel.findByIdAndDelete(req.params._id);
+      const cart = await cartModel.findOneAndDelete({ _id: req.params._id, userId: req.params.userId });
+      if (!cart) {
+        return res.status(404).send('Cart not found');
+      }
       console.log(cart);
-      return res.json("cart deleted"); s
+      return res.json("cart deleted");
     } catch (error) {
       console.log(error);
+      res.status(500).json(error);
     }
   };
 };

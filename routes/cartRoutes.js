@@ -4,11 +4,11 @@ const { validate } = require("../utils/validation")
 const { productSchema } = require("../models/productModel")
 const router = express.Router();
 
-router.post('/cart', createCart());
-router.get('/cart/:_id', getCartById())
-router.get('/cart', getAllCarts())
-router.put('/cart/:_id', updateCart())
-router.delete('/cart/:_id', deleteCart())
+router.post('/user/:userId/cart', createCart());
+router.get('/user/:userId/cart/:_id', getCartById())
+router.get('/user/:userId/cart', getAllCarts())
+router.put('/user/:userId/cart/:_id', updateCart())
+router.delete('/user/:userId/cart/:_id', deleteCart())
 
 
 module.exports.cartRoutes = router

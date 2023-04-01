@@ -11,7 +11,8 @@ const signupSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true
+    default: "?Dh3444440"
+
   }
 })
 

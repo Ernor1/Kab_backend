@@ -9,7 +9,8 @@ module.exports.createAccount = () => {
     console.log("was here");
     return async (req, res, next) => {
         const { error } = validateUser(req.body)
-        if (error) return res.send(error.details[0].message)
+        console.log(error);
+        if (error) return res.status(201).json({ message: error.details[0].message })
         try {
             const user = new userModel({
                 username: req.body.username,
@@ -24,9 +25,7 @@ module.exports.createAccount = () => {
             user.password = await bcryptjs.hash(user.password, salt)
             await user.save();
             console.log(user);
-            res.cookie('userdata', user.email)
             res.status(201).json({ user: user, message: 'user created successfully' })
-            res.redirect('/login')
         } catch (error) {
             console.log("was here this is the error" + error);
         }
@@ -38,7 +37,7 @@ module.exports.getUserById = () => {
         console.log(req.params);
         try {
             const user = await userModel.findById(req.params._id)
-            res.status(200).send(user);
+            res.status(200).json(user);
 
         } catch (error) {
             console.log(error);
@@ -73,7 +72,7 @@ module.exports.updateUser = (req, res, next) => {
 module.exports.deleteUser = () => {
     return async (req, res) => {
         try {
-            user = await userModel.findByIdAndDelete(req.params.id);
+            user = await userModel.findByIdAndDelete(req.params._id);
             res.send("user deleted")
         } catch (error) {
             console.log(error);
@@ -95,35 +94,33 @@ module.exports.loginUser = () => {
         try {
             const { email, password } = req.body;
             const user = await userModel.findOne({ email: email });
+            console.log("This is the " + user);
             if (!user) {
-                return res.send("person not found");
+                return res.json({ message: "person not found" });
             }
-            console.log(user.password);
+            console.log(password);
             const passwordMatch = await bcryptjs.compare(password, user.password);
             console.log(passwordMatch);
             if (!passwordMatch) {
                 console.log("Testing");
-                return res.send("incorrect password or email");
+                return res.json({ message: "incorrect password or email" });
             }
             let token = jwt.sign({
-                _id: person._id
+                _id: user._id
             },
-                process.env.MY_TOKEN
+                process.env.JWT
             );
             res.cookie("userdata", user.email, {
                 sameSite: true,
                 httpOnly: false,
-                maxAge: 24 * 60 * 60 * 1000
+                maxAge: 24 * 60 * 60 * 1000,
+                user: user
             });
             // await user.save()
-            const returnTo = req.session.returnTo || '/';
-            delete req.session.returnTo;
-            res.redirect(returnTo);
             // console.log(email)
-            req.session.set('user', { email: user.email, name: user.username, token })
-            await req.session.save()
-            return res.json(token);
+            return res.json({ "message": "user logged in successfully", "token": token, "user": user });
         } catch (error) {
+            res.json({ message: error.message })
             console.log(error);
         }
     }
