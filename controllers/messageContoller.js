@@ -1,25 +1,26 @@
 const mongoose = require("mongoose");
-const {messageSchema,messageModel} = require('../models/messageModel')
-const {messageValidation} = require("../utils/msgValidation")
+const { messageSchema, messageModel } = require('../models/messageModel')
+const { messageValidation } = require("../utils/msgValidation")
 // import {describe, expect, test} from '@jest/globals';
 
 
 module.exports.createMessage = () => {
-   return async (req, res, next) => {
+  return async (req, res, next) => {
 
-    const {error} = messageValidation(req.body)
-    if(error) return res.send(error.details[0].message)
-  try {
-     const message = new messageModel({
+    const { error } = messageValidation(req.body)
+    if (error) return res.json({ message: error.details[0].message })
+    try {
+      const message = new messageModel({
         name: req.body.name,
-        email:req.body.email,
-        subject:req.body.subject,
-        category: req.body.category,
-       
+        email: req.body.email,
+        subject: req.body.subject,
+        message: req.body.message,
+
       });
 
       await message.save();
-      res.send(message).status(201);
+      res.json({ message: "Message sent succcessfully", data: message }).status(201);
+      console.log(message);
     } catch (error) {
       console.error(error);
     }
@@ -50,15 +51,15 @@ module.exports.getAllMessages = () => {
 
 module.exports.updateMessage = () => {
   return async (req, res) => {
-   try {
-     message = await messageModel.findByIdAndUpdate(req.params._id, req.body);
-     res.send("message updated").status(201);
-   return await message.save(); 
+    try {
+      message = await messageModel.findByIdAndUpdate(req.params._id, req.body);
+      res.send("message updated").status(201);
+      return await message.save();
 
-   } catch (error) {
-    console.log(error);
-   }
-   
+    } catch (error) {
+      console.log(error);
+    }
+
   };
 };
 
