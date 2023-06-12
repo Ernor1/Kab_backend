@@ -18,6 +18,7 @@ cloudinary.config({
 });
 
 let uploadFromBuffer = (req) => {
+  console.log(req.files);
   return new Promise((resolve, reject) => {
     let cld_upload_stream = cloudinary.uploader.upload_stream(
       {
@@ -37,17 +38,54 @@ let uploadFromBuffer = (req) => {
       .pipe(cld_upload_stream);
   });
 };
+let uploadMultipleFromBuffer = (req) => {
+  console.log(req.files);
+  return new Promise((resolve, reject) => {
+    const uploadPromises = [];
+
+    const arr = Object.entries(req.files).map(([key, value]) => ({ key, value }));
+
+    arr.forEach((element) => {
+      const uploadPromise = new Promise((resolve, reject) => {
+        let cld_upload_stream = cloudinary.uploader.upload_stream(
+          {
+            folder: "Kabstore",
+          },
+          (error, result) => {
+            if (result) {
+              resolve(result);
+            } else {
+              reject(error);
+            }
+          }
+        );
+
+        streamifier
+          .createReadStream(element.value.data)
+          .pipe(cld_upload_stream);
+      });
+
+      uploadPromises.push(uploadPromise);
+    });
+
+    Promise.all(uploadPromises)
+      .then((results) => resolve(results))
+      .catch((error) => reject(error));
+  });
+};
+
+
 module.exports.createProduct = () => {
   return async (req, res, next) => {
-    // console.log(req.body);
+    console.log(req.body);
     console.log(req.files.picture);
 
     const { error } = validate(req.body);
     if (error) return res.send(error.details[0].message);
     try {
       // Upload the image
-      const result = await uploadFromBuffer(req);
-      console.log(result);
+      const results = await uploadMultipleFromBuffer(req)
+      const finalResults = results.map((result) => result.url);
 
       // then(result=>console.log(result));
 
@@ -57,13 +95,21 @@ module.exports.createProduct = () => {
         category: req.body.category,
         discount: req.body.discount,
         status: req.body.status,
-        picture: result.url,
+        pictures: finalResults,
+        description: req.body.description,
       });
 
       await product.save();
-      res.send(product).status(201);
+      res.json({
+        product: product,
+        message: "product created",
+      }).status(201);
     } catch (error) {
       console.error(error);
+      res.json({
+        product: product,
+        message: error,
+      }).status(500);
     }
   };
 };
@@ -72,7 +118,7 @@ module.exports.getProductById = () => {
     console.log(req.params);
     try {
       const product = await productModel.findById(req.params._id);
-      res.status(200).send(product);
+      res.status(200).json({ product: product });
     } catch (error) {
       console.log(error);
     }
@@ -83,15 +129,60 @@ module.exports.getAllProducts = () => {
   return async (req, res) => {
     try {
       const products = await productModel.find();
-      return res.send(products).status(200);
+      return res.json(products).status(200);
     } catch (error) {
       console.log(error);
     }
   };
 };
-
-module.exports.updateProduct = () => {
+module.exports.productImages = () => {
   return async (req, res) => {
+    const results = await uploadMultipleFromBuffer(req)
+    const finalResults = results.map((result) => result.url);
+
+    try {
+      product = await productModel.updateOne({ _id: req.params._id }, { $push: { pictures: { $each: finalResults } } })
+      res.json({
+        message: "product updated",
+        product: product
+      }).status(201);
+
+    } catch (error) {
+      res.json({
+        message: error
+      }).status(201);
+      console.log(error);
+    }
+
+
+  }
+}
+module.exports.updateProduct = () => {
+
+  return async (req, res) => {
+    if (req.files) {
+
+      try {
+        const results = await uploadMultipleFromBuffer(req);
+        const finalResults = results.map((result) => result.url);
+        req.body.pictures = finalResults;
+
+        product = await productModel.findByIdAndUpdate(req.params._id, req.body);
+        res.json({
+          message: "product updated",
+          product: product
+        }).status(201);
+
+
+      } catch (error) {
+        res.json({
+          message: error
+        }).status(201);
+        console.log(error);
+      }
+
+    }
+
     // const product = await productModel.findOne({ id: req.params.id });
     // if (!product)
     //   return res.status(404).send(`user with id${req.params.id} was not found`);
@@ -104,10 +195,16 @@ module.exports.updateProduct = () => {
     // );
     try {
       product = await productModel.findByIdAndUpdate(req.params._id, req.body);
-      res.send("product updated").status(201);
-      return await product.save();
+      res.json({
+        message: "product updated",
+        product: product
+      }).status(201);
+
 
     } catch (error) {
+      res.json({
+        message: error
+      }).status(201);
       console.log(error);
     }
 
@@ -116,13 +213,16 @@ module.exports.updateProduct = () => {
 
 
   };
-};
+}
+
 
 module.exports.deleteProduct = () => {
   return async (req, res) => {
     try {
-      product = await productModel.findByIdAndDelete(req.params.id);
-      return res.send("product deleted");
+      product = await productModel.findByIdAndDelete(req.params._id);
+      console.log("deleted");
+      console.log(product);
+      return res.json({ message: "product deleted" });
     } catch (error) {
       console.log(error);
     }

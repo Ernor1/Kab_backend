@@ -13,7 +13,7 @@ const productSchema = mongoose.Schema({
     category: {
         type: String,
         required: true,
-        enum: ["Phone", "Computers", "Accessories", "Audio"],
+        // enum: ["Phone", "Computers", "Accessories", "Audio"],
     },
     discount: {
         type: String,
@@ -23,7 +23,11 @@ const productSchema = mongoose.Schema({
         type: String,
         required: true
     },
-    picture: {
+    pictures: {
+        type: [String],  // Array of strings
+        required: true
+    },
+    description: {
         type: String,
         required: true
     }

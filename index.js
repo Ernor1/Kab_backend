@@ -15,6 +15,7 @@ const PORT = process.env.PORT
 const dbConnection = require('./middleware/database')
 const schema = require('./models/productModel')
 const { productRoutes } = require('./routes/productRouter')
+const { categoryRoutes } = require('./routes/categoryRouter')
 const { promProductRoutes } = require('./routes/promProductRoutes')
 const { messageRoutes } = require("./routes/messageRouter")
 const { wishRoutes } = require("./routes/wishRoutes")
@@ -38,6 +39,7 @@ app.use(contactRoutes)
 app.use(cartRoutes)
 app.use(adminRoutes)
 app.use(userRoutes);
+app.use(categoryRoutes);
 // app.use(express.static)  
 
 

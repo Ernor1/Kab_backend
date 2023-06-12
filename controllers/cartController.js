@@ -101,7 +101,7 @@ module.exports.getAllCarts = () => {
     try {
       console.log("this is the ", userId);
       if (userId !== "undefined") {
-        const carts = await cartModel.find({ user: userId }); 
+        const carts = await cartModel.find({ user: userId });
         return res.json(carts).status(200);
       }
       else {
