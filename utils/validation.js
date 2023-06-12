@@ -7,7 +7,7 @@ function validateProduct(product) {
         name: Joi.string().required(),
         price: Joi.number().required(),
         category: Joi.string().required(),
-        discount: Joi.number().required(),
+        discount: Joi.string().required(),
         status: Joi.string().required(),
         description: Joi.string().required(),
         // Picture:Joi.string().required()

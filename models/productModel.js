@@ -21,7 +21,8 @@ const productSchema = mongoose.Schema({
     },
     status: {
         type: String,
-        required: true
+        required: true,
+        enum: ["AVAILABLE", "UNAVAILABLE", "COMING SOON", "OUT OF STOCK"]
     },
     pictures: {
         type: [String],  // Array of strings

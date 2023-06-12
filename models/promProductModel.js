@@ -12,11 +12,10 @@ const promProductSchema = mongoose.Schema({
     },
     category: {
         type: String,
-        required: true,
-        enum: ["Phone", "Computers", "Accessories", "Audio"],
+        required: true
     },
-    picture: {
-        type: String,
+    pictures: {
+        type: [String],
         required: true
     },
     duration: {

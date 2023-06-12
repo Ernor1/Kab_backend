@@ -78,7 +78,7 @@ let uploadMultipleFromBuffer = (req) => {
 module.exports.createProduct = () => {
   return async (req, res, next) => {
     console.log(req.body);
-    console.log(req.files.picture);
+    console.log("from here", req.files);
 
     const { error } = validate(req.body);
     if (error) return res.send(error.details[0].message);
@@ -86,6 +86,7 @@ module.exports.createProduct = () => {
       // Upload the image
       const results = await uploadMultipleFromBuffer(req)
       const finalResults = results.map((result) => result.url);
+      console.log(finalResults);
 
       // then(result=>console.log(result));
 
