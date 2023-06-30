@@ -45,11 +45,16 @@ let uploadMultipleFromBuffer = (req) => {
 
     const arr = Object.entries(req.files).map(([key, value]) => ({ key, value }));
 
+    const picturesPromises = [];
+    const colorPicturesPromises = [];
+
     arr.forEach((element) => {
       const uploadPromise = new Promise((resolve, reject) => {
         let cld_upload_stream = cloudinary.uploader.upload_stream(
           {
             folder: "Kabstore",
+            // Append a unique identifier for color pictures
+            public_id: element.key.includes('color') ? `${element.key}_${Date.now()}` : undefined,
           },
           (error, result) => {
             if (result) {
@@ -65,14 +70,32 @@ let uploadMultipleFromBuffer = (req) => {
           .pipe(cld_upload_stream);
       });
 
+      if (element.key.includes('color')) {
+        colorPicturesPromises.push(uploadPromise);
+      } else {
+        picturesPromises.push(uploadPromise);
+      }
+
       uploadPromises.push(uploadPromise);
     });
 
     Promise.all(uploadPromises)
-      .then((results) => resolve(results))
+      .then((results) => {
+        const picturesResults = results.filter(result => !result.public_id.includes('color'));
+        const colorPicturesResults = results.filter(result => result.public_id.includes('color'));
+        const sortedPicturesResults = picturesResults.sort((a, b) => a.public_id.localeCompare(b.public_id));
+        const sortedColorPicturesResults = colorPicturesResults.sort((a, b) => a.public_id.localeCompare(b.public_id));
+
+        resolve({
+          pictures: sortedPicturesResults,
+          colorPictures: sortedColorPicturesResults
+        });
+      })
       .catch((error) => reject(error));
   });
 };
+
+
 
 
 module.exports.createProduct = () => {
@@ -85,8 +108,11 @@ module.exports.createProduct = () => {
     try {
       // Upload the image
       const results = await uploadMultipleFromBuffer(req)
-      const finalResults = results.map((result) => result.url);
+      console.log(results);
+      const finalResults = results.pictures.map((result) => result.url);
       console.log(finalResults);
+      const colorResults = results.colorPictures.map((result) => result.url);
+      console.log(colorResults);
 
       // then(result=>console.log(result));
 
@@ -98,6 +124,9 @@ module.exports.createProduct = () => {
         status: req.body.status,
         pictures: finalResults,
         description: req.body.description,
+        colors: req.body.colors,
+        imageColors: colorResults
+
       });
 
       await product.save();
@@ -108,7 +137,6 @@ module.exports.createProduct = () => {
     } catch (error) {
       console.error(error);
       res.json({
-        product: product,
         message: error,
       }).status(500);
     }

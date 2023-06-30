@@ -1,6 +1,4 @@
-const { integer } = require("joi")
-// import { object, string, number, array } from '@hapi/joi';
-const Joi = require("joi")
+const Joi = require("joi");
 
 function validateProduct(product) {
     const schema = Joi.object({
@@ -10,12 +8,10 @@ function validateProduct(product) {
         discount: Joi.string().required(),
         status: Joi.string().required(),
         description: Joi.string().required(),
-        // Picture:Joi.string().required()
+        colors: Joi.array().items(Joi.string()).required(),
+    });
 
-    })
-
-
-    return schema.validate(product)
+    return schema.validate(product);
 }
 
 module.exports.validate = validateProduct;

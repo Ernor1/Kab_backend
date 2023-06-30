@@ -41,7 +41,7 @@ module.exports.getAllCategories = () => {
     return async (req, res) => {
         try {
             const categories = await categoryModel.find();
-            return res.send(categories).status(200);
+            return res.send({ categories }).status(200);
         } catch (error) {
             console.log(error);
         }
