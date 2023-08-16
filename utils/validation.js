@@ -8,7 +8,7 @@ function validateProduct(product) {
         discount: Joi.string().required(),
         status: Joi.string().required(),
         description: Joi.string().required(),
-        colors: Joi.array().items(Joi.string()).required(),
+        colors: Joi.string().required(),
     });
 
     return schema.validate(product);

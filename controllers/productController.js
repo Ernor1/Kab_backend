@@ -38,18 +38,13 @@ let uploadFromBuffer = (req) => {
       .pipe(cld_upload_stream);
   });
 };
-let uploadMultipleFromBuffer = (req) => {
+const uploadMultipleFromBuffer = (req) => {
   console.log(req.files);
-  return new Promise((resolve, reject) => {
-    const uploadPromises = [];
-
+  return new Promise(async (resolve, reject) => {
     const arr = Object.entries(req.files).map(([key, value]) => ({ key, value }));
 
-    const picturesPromises = [];
-    const colorPicturesPromises = [];
-
-    arr.forEach((element) => {
-      const uploadPromise = new Promise((resolve, reject) => {
+    const uploadPromises = arr.map((element) => {
+      return new Promise((resolve, reject) => {
         let cld_upload_stream = cloudinary.uploader.upload_stream(
           {
             folder: "Kabstore",
@@ -69,31 +64,26 @@ let uploadMultipleFromBuffer = (req) => {
           .createReadStream(element.value.data)
           .pipe(cld_upload_stream);
       });
-
-      if (element.key.includes('color')) {
-        colorPicturesPromises.push(uploadPromise);
-      } else {
-        picturesPromises.push(uploadPromise);
-      }
-
-      uploadPromises.push(uploadPromise);
     });
 
-    Promise.all(uploadPromises)
-      .then((results) => {
-        const picturesResults = results.filter(result => !result.public_id.includes('color'));
-        const colorPicturesResults = results.filter(result => result.public_id.includes('color'));
-        const sortedPicturesResults = picturesResults.sort((a, b) => a.public_id.localeCompare(b.public_id));
-        const sortedColorPicturesResults = colorPicturesResults.sort((a, b) => a.public_id.localeCompare(b.public_id));
+    try {
+      const results = await Promise.all(uploadPromises);
 
-        resolve({
-          pictures: sortedPicturesResults,
-          colorPictures: sortedColorPicturesResults
-        });
-      })
-      .catch((error) => reject(error));
+      const picturesResults = results.filter(result => !result.public_id.includes('color'));
+      const colorPicturesResults = results.filter(result => result.public_id.includes('color'));
+      const sortedPicturesResults = picturesResults.sort((a, b) => a.public_id.localeCompare(b.public_id));
+      const sortedColorPicturesResults = colorPicturesResults.sort((a, b) => a.public_id.localeCompare(b.public_id));
+
+      resolve({
+        pictures: sortedPicturesResults,
+        colorPictures: sortedColorPicturesResults
+      });
+    } catch (error) {
+      reject(error);
+    }
   });
 };
+
 
 
 
@@ -108,11 +98,12 @@ module.exports.createProduct = () => {
     try {
       // Upload the image
       const results = await uploadMultipleFromBuffer(req)
-      console.log(results);
+      console.log("These are the resuts for the images", results);
       const finalResults = results.pictures.map((result) => result.url);
       console.log(finalResults);
       const colorResults = results.colorPictures.map((result) => result.url);
       console.log(colorResults);
+
 
       // then(result=>console.log(result));
 
@@ -124,7 +115,7 @@ module.exports.createProduct = () => {
         status: req.body.status,
         pictures: finalResults,
         description: req.body.description,
-        colors: req.body.colors,
+        colors: JSON.parse(req.body.colors),
         imageColors: colorResults
 
       });
@@ -135,7 +126,7 @@ module.exports.createProduct = () => {
         message: "product created",
       }).status(201);
     } catch (error) {
-      console.error(error);
+      console.error("images error", error);
       res.json({
         message: error,
       }).status(500);
