@@ -51,7 +51,7 @@ module.exports.getAllCategories = () => {
 module.exports.updateCategory = () => {
     return async (req, res) => {
         // const category = await categoryModel.findOne({ id: req.params.id });
-        // if (!category)
+        // if (!category) 
         //   return res.status(404).send(`user with id${req.params.id} was not found`);
         // category = await categoryModel.findOneAndUpdate(
         //   {

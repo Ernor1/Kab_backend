@@ -34,10 +34,12 @@ const productSchema = mongoose.Schema({
     },
     colors: {
         type: [String],
+        default: []
 
     },
     imageColors: {
         type: [String],
+        default: []
 
     }
 })

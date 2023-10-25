@@ -39,7 +39,7 @@ let uploadFromBuffer = (req) => {
   });
 };
 const uploadMultipleFromBuffer = (req) => {
-  console.log(req.files);
+  console.log("these are the files", req.files);
   return new Promise(async (resolve, reject) => {
     const arr = Object.entries(req.files).map(([key, value]) => ({ key, value }));
 
@@ -100,7 +100,7 @@ module.exports.createProduct = () => {
       const results = await uploadMultipleFromBuffer(req)
       console.log("These are the resuts for the images", results);
       const finalResults = results.pictures.map((result) => result.url);
-      console.log(finalResults);
+      console.log("These are the ", finalResults);
       const colorResults = results.colorPictures.map((result) => result.url);
       console.log(colorResults);
 
@@ -139,6 +139,7 @@ module.exports.getProductById = () => {
     try {
       const product = await productModel.findById(req.params._id);
       res.status(200).json({ product: product });
+      console.log("The product", product);
     } catch (error) {
       console.log(error);
     }
@@ -158,7 +159,8 @@ module.exports.getAllProducts = () => {
 module.exports.productImages = () => {
   return async (req, res) => {
     const results = await uploadMultipleFromBuffer(req)
-    const finalResults = results.map((result) => result.url);
+    console.log("update Images ", results.pictures);
+    const finalResults = results.pictures.map((result) => result.url);
 
     try {
       product = await productModel.updateOne({ _id: req.params._id }, { $push: { pictures: { $each: finalResults } } })
@@ -247,4 +249,4 @@ module.exports.deleteProduct = () => {
       console.log(error);
     }
   };
-};
+}
